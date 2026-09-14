@@ -1,0 +1,4 @@
+printf "__pycache__/\n*.pyc\n.DS_Store\n" > .gitignore
+git add .gitignore
+git commit -m "add gitignore"
+git push
