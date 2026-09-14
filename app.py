@@ -16,6 +16,7 @@ Stdlib only. Run:  python3 app.py  ->  http://0.0.0.0:8321
 """
 
 import json
+import os
 import re
 import threading
 import urllib.parse
@@ -25,7 +26,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 BASE = Path(__file__).parent
-PORT = 8321
+PORT = int(os.environ.get("PORT", 8321))
 UA = "AIOutreachFinder/1.0 (free lead-finding tool for local sellers)"
 
 # ---------------------------------------------------------------------------
