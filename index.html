@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Outreach Finder — free lead finder + pitch generator</title>
+<style>
+  :root{
+    --bg:#0b0f17; --panel:#111827; --panel2:#0f1522; --line:#1f2a3d;
+    --txt:#e6edf7; --mut:#8fa0b8; --acc:#4f8cff; --acc2:#7c5cff;
+    --green:#22c55e; --red:#ef4444; --amber:#f59e0b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:90px}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 16px}
+  header h1{font-size:26px;letter-spacing:-.4px}
+  header h1 span{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{color:var(--mut);margin-top:6px;max-width:760px}
+  .free-badge{display:inline-block;margin-top:10px;padding:4px 12px;border:1px solid #14532d;background:#052e16;color:#4ade80;border-radius:999px;font-size:12.5px;font-weight:600}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:18px}
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+  .grid{display:grid;grid-template-columns:2fr 1.4fr 2fr 1fr;gap:14px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.grid{grid-template-columns:1fr}}
+  input[type=text],select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:11px 12px;font-size:14.5px;outline:none}
+  input[type=text]:focus,select:focus{border-color:var(--acc)}
+  select optgroup{color:var(--mut)}
+  .radius-row{display:flex;align-items:center;gap:10px}
+  input[type=range]{width:100%;accent-color:var(--acc)}
+  .radius-val{min-width:52px;text-align:right;font-weight:700;color:var(--acc)}
+  .suggestions{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--panel);border:1px solid var(--line);border-radius:10px;z-index:30;overflow:hidden;display:none}
+  .suggestions div{padding:9px 12px;cursor:pointer;font-size:13.5px;color:var(--txt)}
+  .suggestions div:hover{background:#1a2436}
+  .sug-wrap{position:relative}
+  button{cursor:pointer;border:none;border-radius:10px;font-weight:700}
+  .btn-main{background:linear-gradient(90deg,var(--acc),var(--acc2));color:#fff;padding:12px 22px;font-size:15px;width:100%;margin-top:16px}
+  .btn-main:disabled{opacity:.55;cursor:wait}
+  .btn-sm{background:#1a2436;color:var(--txt);border:1px solid var(--line);padding:6px 12px;font-size:12.5px;font-weight:600}
+  .btn-sm:hover{border-color:var(--acc)}
+  .btn-acc{background:var(--acc);color:#fff;padding:6px 12px;font-size:12.5px}
+  .svc-info{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:13.5px;color:var(--mut)}
+  .svc-info b{color:var(--txt)}
+  .svc-info .chip{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 10px}
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid #ffffff44;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .err{background:#2a1215;border:1px solid #7f1d1d;color:#fca5a5;border-radius:10px;padding:12px 14px;margin-top:14px;font-size:14px}
+  .result-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .result-head h2{font-size:18px}
+  .result-head span{color:var(--mut);font-size:13.5px}
+  .lead{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+  .lead-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .lead-name{font-size:16.5px;font-weight:700}
+  .fit{font-size:12.5px;font-weight:800;padding:5px 12px;border-radius:999px;white-space:nowrap}
+  .fit-hi{background:#052e16;color:#4ade80;border:1px solid #14532d}
+  .fit-mid{background:#27200b;color:#fbbf24;border:1px solid #57430f}
+  .fit-lo{background:#1c1526;color:#a78bfa;border:1px solid #3b2e63}
+  .meta{color:var(--mut);font-size:13.5px;margin-top:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{font-size:12.5px;background:var(--panel2);border:1px solid var(--line);color:#c8d4e8;padding:5px 10px;border-radius:8px;text-decoration:none}
+  a.chip:hover{border-color:var(--acc);color:#fff}
+  .reasons{margin-top:10px;font-size:13px;color:var(--mut)}
+  .reasons div{margin-top:3px}
+  .section-label{font-size:11.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--acc);margin-top:14px}
+  .dm-box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:8px;font-size:13.5px}
+  .dm-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .dm-links a{font-size:12.5px;font-weight:600;color:#c8d4e8;background:var(--panel);border:1px solid var(--line);padding:6px 12px;border-radius:8px;text-decoration:none}
+  .dm-links a:hover{border-color:var(--acc);color:#fff}
+  .tabs{display:flex;gap:8px;margin-top:8px}
+  .tab{padding:7px 16px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);color:var(--mut);font-size:13px;font-weight:700}
+  .tab.on{background:#16233c;border-color:var(--acc);color:#fff}
+  pre.pitch{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:10px;white-space:pre-wrap;word-wrap:break-word;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#d7e1f0}
+  .pitch-actions{display:flex;gap:8px;margin-top:10px;align-items:center}
+  .hint{font-size:12px;color:var(--mut);margin-top:8px}
+  .lead-foot{display:flex;justify-content:flex-end;margin-top:12px}
+  .shortlist-bar{position:fixed;left:0;right:0;bottom:0;background:#0d1420ee;backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 16px;display:none;justify-content:center;gap:10px;z-index:50}
+  .shortlist-bar.show{display:flex}
+  .shortlist-bar .count{font-size:13.5px;color:var(--mut);font-weight:600}
+  details{margin-top:18px}
+  summary{cursor:pointer;font-weight:700;color:var(--txt);font-size:15px}
+  details p{color:var(--mut);font-size:13.5px;margin-top:10px;max-width:820px}
+  details li{color:var(--mut);font-size:13.5px;margin:6px 0 6px 20px}
+  .toast{position:fixed;top:18px;right:18px;background:#052e16;border:1px solid #14532d;color:#4ade80;padding:10px 16px;border-radius:10px;font-size:13.5px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1}
+  .star{color:#3b4a63;font-size:14px}
+  .star.on{color:#fbbf24}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🎯 AI Outreach <span>Finder</span></h1>
+    <p>Find local businesses that actually need a specific AI service → see their real contact details → find who makes the decision → copy a personalised pitch. Built for selling the 10 AI automations.</p>
+    <div class="free-badge">💸 100% free on your end — no API keys, no cards, no credits. Data: OpenStreetMap (free public API).</div>
+  </header>
+
+  <div class="card">
+    <div class="grid">
+      <div class="sug-wrap">
+        <label for="city">City to search</label>
+        <input type="text" id="city" placeholder="e.g. Lagos, London, Austin" autocomplete="off">
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+      <div>
+        <label for="category">Business type</label>
+        <select id="category"></select>
+      </div>
+      <div>
+        <label for="service">AI service you're selling</label>
+        <select id="service"></select>
+      </div>
+      <div>
+        <label>Radius: <span id="radiusVal">5 km</span></label>
+        <div class="radius-row">
+          <input type="range" id="radius" min="1" max="25" value="5" step="1">
+        </div>
+      </div>
+    </div>
+    <button class="btn-main" id="go" onclick="searchLeads()">Find leads & generate pitches</button>
+    <div class="svc-info" id="svcInfo"></div>
+    <div id="errBox"></div>
+  </div>
+
+  <div id="results"></div>
+
+  <details class="card">
+    <summary>⚡ How it works (and why it's completely free)</summary>
+    <p>1. <b>Discovery</b> — the app queries OpenStreetMap's free public API for real, mapped businesses of the type you pick, in the city and radius you set. It pulls their name, address, phone, email, website and social profiles — all real data you can verify.</p>
+    <ul>
+      <li><b>Does it <i>guess</i> or <i>verify</i> they need it?</b> Both — and it tells you which. The app <b>live-checks each lead's website</b> (✅): it reads their homepage and flags whether they <i>already run a chat widget</i> (Tidio, Intercom, Drift…), whether they have a <i>booking system</i> (Calendly, Booksy…), and how many <i>help/support pages</i> they run. That's real evidence, not a guess. On top of that it adds <b>signals</b> (⚡) from map data (has a phone, active socials, known buyer type) and points you at <b>10-second manual checks</b> (🔎) like their Google review responses. The fit score blends ✅ + ⚡; 🔎 items are the proof that turns "probably" into "yes, they need it".</li>
+      <li><b>Decision-maker</b> — the app tells you the most likely role (e.g. Office Manager for a dental office), and if their website has a Team/About page it will often pull a <i>real person's name + title</i> from it. One-click LinkedIn / Google / Facebook searches are pre-filled with their business name. You open those in your own free account.</li>
+      <li><b>Pitches</b> — every lead gets a ready email + DM personalised with their real name, city, phone/website. Only [REVIEW COUNT] and [Your name] are left for you to fill.</li>
+    </ul>
+    <p>2. <b>It stays free</b> — Overpass API and Nominatim are free and keyless. No paid LLM: pitches come from a built-in template engine. LinkedIn/Google searches run in your own free browser account.</p>
+    <p>3. <b>Tips</b> — start with radius 3–5 km in a dense downtown; use the <b>Shortlist ★</b> button and then <b>Export CSV</b> to track who you've contacted. For B2B services (7, 8, 10), use the extra LinkedIn company search on each card to also target bigger firms.</p>
+  </details>
+</div>
+
+<div class="shortlist-bar" id="shortBar">
+  <span class="count" id="shortCount"></span>
+  <button class="btn-acc" onclick="exportCSV()">Export CSV</button>
+  <button class="btn-sm" onclick="copyAllPitches()">Copy all pitches</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let META = null;
+let CURRENT = null;         // current search result
+const shortlist = new Map(); // name -> lead
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const md = t => esc(t).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+const ricon = k => k === "verified" ? "✅" : k === "check" ? "🔎" : "⚡";
+
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1600);
+}
+
+function robustCopy(text, label){
+  function done(){ toast(label || "Copied to clipboard"); }
+  if (navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); done(); }
+  catch(e){ alert("Copy blocked — select the text manually."); }
+  document.body.removeChild(ta);
+}
+
+async function loadMeta(){
+  const r = await fetch("/api/meta"); META = await r.json();
+  const cat = $("category");
+  cat.innerHTML = META.categories.map(c=>`<option value="${c.key}">${esc(c.label)}</option>`).join("");
+  const sv = $("service");
+  sv.innerHTML =
+    `<optgroup label="🟢 Easy (1–4 weeks, $500–$3,000)">` +
+    META.services.filter(s=>s.tier==="easy").map(s=>`<option value="${s.key}">${esc(s.label)}</option>`).join("") +
+    `</optgroup><optgroup label="🔴 Hard (1–3 months, $3,000–$25,000+)">` +
+    META.services.filter(s=>s.tier==="hard").map(s=>`<option value="${s.key}">${esc(s.label)}</option>`).join("") +
+    `</optgroup>`;
+  updateSvcInfo();
+  sv.onchange = updateSvcInfo;
+}
+
+function svcByKey(k){ return META.services.find(s=>s.key===k); }
+
+function updateSvcInfo(){
+  const full = {
+    chatbot:{buyers:"Dentists, law firms, HVAC, med spas, realtors",price:"$997–$2,500 setup · $97–$297/mo",learn:"1–2 weeks"},
+    dm:{buyers:"Coaches, creators, e-comm, realtors, fitness, beauty",price:"$500–$1,500 · $97–$197/mo",learn:"1–2 weeks"},
+    email_support:{buyers:"E-commerce, SaaS, subscription boxes",price:"$1,500–$3,000 · $200–$500/mo",learn:"2–3 weeks"},
+    content:{buyers:"Podcasters, YouTubers, coaches, founders",price:"$1,500–$3,000 · $297–$797/mo",learn:"2–4 weeks"},
+    reviews:{buyers:"Restaurants, hotels, dental, auto, salons",price:"$500–$1,500 · $97–$297/mo",learn:"1–2 weeks"},
+    voice:{buyers:"Dental, med spa, HVAC, law firms, dealerships",price:"$2,500–$7,500 · $497–$1,997/mo",learn:"4–8 weeks"},
+    clay_outbound:{buyers:"B2B SaaS, agencies, IT, consulting",price:"$3,000–$8,000 · $1,000–$4,000/mo",learn:"4–8 weeks"},
+    rag_support:{buyers:"SaaS post-Series A, e-comm $2M+, fintech",price:"$5,000–$15,000 · $1,000–$3,000/mo",learn:"6–12 weeks"},
+    doc_processing:{buyers:"Accounting firms, CFOs, logistics, law",price:"$5,000–$20,000 · $500–$3,000/mo",learn:"6–10 weeks"},
+    knowledge_bot:{buyers:"100–2,000 employee companies",price:"$8,000–$30,000+ · $1,000–$5,000/mo",learn:"8–16 weeks"}
+  };
+  const s = full[$("service").value];
+  $("svcInfo").innerHTML =
+    `<span class="chip">👥 <b>Who buys it:</b> ${esc(s.buyers)}</span>` +
+    `<span class="chip">💰 <b>Charge:</b> ${esc(s.price)}</span>` +
+    `<span class="chip">⏱ <b>To learn:</b> ${esc(s.learn)}</span>`;
+}
+
+/* ---- city suggestions (Nominatim, debounced) ---- */
+let sugTimer = null;
+$("city").addEventListener("input", e=>{
+  clearTimeout(sugTimer);
+  const q = e.target.value.trim();
+  if (q.length < 3){ $("suggestions").style.display="none"; return; }
+  sugTimer = setTimeout(async ()=>{
+    try{
+      const r = await fetch("/api/suggest", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({q})});
+      const d = await r.json();
+      const box = $("suggestions");
+      if (!d.results || !d.results.length){ box.style.display="none"; return; }
+      box.innerHTML = d.results.map(x=>`<div data-v="${esc(x.value)}">${esc(x.label)}</div>`).join("");
+      box.style.display="block";
+      [...box.children].forEach(el=>el.onclick=()=>{
+        $("city").value = el.dataset.v; box.style.display="none";
+      });
+    }catch(err){}
+  }, 550);
+});
+document.addEventListener("click", e=>{
+  if (!e.target.closest(".sug-wrap")) $("suggestions").style.display="none";
+});
+
+/* ---- search ---- */
+async function searchLeads(){
+  const city = $("city").value.trim();
+  if (!city){ showErr("Enter a city first."); return; }
+  $("errBox").innerHTML = "";
+  const btn = $("go");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span>Searching & live-checking websites…`;
+  try{
+    const r = await fetch("/api/leads", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({
+      city, category: $("category").value, service: $("service").value, radius: +$("radius").value
+    })});
+    const d = await r.json();
+    if (r.ok) render(d); else showErr(d.error || "Something went wrong.");
+  }catch(e){ showErr("Network error: " + e.message); }
+  btn.disabled = false;
+  btn.textContent = "Find leads & generate pitches";
+}
+
+function showErr(msg){
+  $("errBox").innerHTML = `<div class="err">⚠️ ${esc(msg)}</div>`;
+  $("results").innerHTML = "";
+}
+
+function render(d){
+  CURRENT = d;
+  const svc = svcByKey($("service").value);
+  const b2bNote = svc && svc.b2b ? ` <span style="color:#fbbf24">(B2B service — each card also includes a LinkedIn company search for bigger targets)</span>` : "";
+  let html = `
+  <div class="card" style="padding:14px 18px">
+    <div class="result-head">
+      <h2>${d.count} lead${d.count===1?"":"s"} — ${esc(d.category)} in ${esc(d.city)} (${d.radius} km)</h2>
+      <span>selling: <b>${esc(d.service)}</b></span>
+    </div>
+    <div class="hint">${esc(d.city_display)}${b2bNote} — leads are sorted best-fit first. ★ to shortlist.</div>
+    <div class="hint" style="margin-top:6px">
+      <b>✅</b> = we actually checked (their website, live) &nbsp;·&nbsp;
+      <b>⚡</b> = strong signal from map data &nbsp;·&nbsp;
+      <b>🔎</b> = a 10-second manual check that confirms the pitch. The fit score blends ✅ + ⚡.
+    </div>
+  </div>`;
+  if (d.count < 3){
+    const wider = Math.min(25, d.radius + 10);
+    html += `<div class="card" style="border-color:#57430f">
+      <b style="color:#fbbf24">📡 Thin data in this area</b>
+      <div class="hint" style="margin-top:6px">OpenStreetMap only has ${d.count} mapped ${esc(d.category.toLowerCase())} within ${d.radius} km of ${esc(d.city)}. Your options:
+        <ul style="margin-top:6px;margin-left:18px">
+          <li>Search a <b>wider radius</b> (${wider} km) with the button below,</li>
+          <li>Switch the business type to <b>Mixed — all local businesses</b> (catches shops, restaurants, banks, clinics, gyms…), or</li>
+          <li>Try a nearby city, or a US/UK/EU city where mapping coverage is densest.</li>
+        </ul>
+        <button class="btn-acc" style="margin-top:8px" onclick="widenSearch(${wider})">🔍 Widen search to ${wider} km</button>
+      </div>
+    </div>`;
+  }
+  d.leads.forEach((L,i)=>{ html += leadCard(L,i); });
+  if (!d.leads.length){
+    html += `<div class="card"><div class="err">No mapped businesses of this type found in that radius. Try a bigger radius, a nearby city, or the "Mixed" business type.</div></div>`;
+  }
+  $("results").innerHTML = html;
+}
+
+function widenSearch(newRadius){
+  $("radius").value = newRadius;
+  $("radiusVal").textContent = newRadius + " km";
+  searchLeads();
+}
+
+function leadCard(L, i){
+  const fitCls = L.fit >= 75 ? "fit-hi" : L.fit >= 58 ? "fit-mid" : "fit-lo";
+  const inList = shortlist.has(L.name);
+  const chips = [];
+  if (L.address) chips.push(`<span class="chip">📍 ${esc(L.address)}</span>`);
+  if (L.phone)   chips.push(`<a class="chip" href="tel:${esc(L.phone)}">📞 ${esc(L.phone)}</a>`);
+  if (L.email)   chips.push(`<a class="chip" href="mailto:${esc(L.email)}">✉️ ${esc(L.email)}</a>`);
+  if (L.website) chips.push(`<a class="chip" href="${esc(L.website)}" target="_blank" rel="noopener">🌐 website</a>`);
+  if (L.facebook)  chips.push(`<a class="chip" href="${esc(L.facebook)}" target="_blank" rel="noopener">📘 Facebook</a>`);
+  if (L.instagram) chips.push(`<a class="chip" href="${esc(L.instagram)}" target="_blank" rel="noopener">📸 Instagram</a>`);
+  const reasons = (L.reasons||[]).map(r=>`<div>${ricon(r.k)} ${esc(r.t)}</div>`).join("");
+  const links = (L.dm_links||[]).map(a=>`<a href="${esc(a.url)}" target="_blank" rel="noopener" title="${esc(a.tip)}">${esc(a.label)} ↗</a>`).join("");
+  const reviewHint = L.email_subject.includes("[REVIEW COUNT]")
+    ? `<div class="hint">✏️ Click <b>"Google reviews — 10-sec check"</b> above → count the reviews → if the owner has never responded, fill <b>[REVIEW COUNT]</b> and send. That specific number is what makes this pitch hit.</div>` : "";
+  return `
+  <div class="lead" data-i="${i}">
+    <div class="lead-top">
+      <div>
+        <div class="lead-name">${esc(L.name)}</div>
+        <div class="meta">${esc(L.address || "address not mapped")}</div>
+      </div>
+      <span class="fit ${fitCls}">${L.fit}/100 · ${esc(L.fit_label)}</span>
+    </div>
+    <div class="chips">${chips.join("") || '<span class="chip">no contact details mapped — use the searches below</span>'}</div>
+    <div class="reasons">${reasons}</div>
+
+    <div class="section-label">🧑‍💼 Who to pitch (decision-maker)</div>
+    <div class="dm-box">
+      ${md(L.dm_line)}
+      <div class="dm-links">${links}</div>
+    </div>
+
+    <div class="section-label">✍️ Your pitch</div>
+    <div class="tabs">
+      <button class="tab on" onclick="showPitch(this,${i},'email')">📧 Email</button>
+      <button class="tab" onclick="showPitch(this,${i},'dm')">💬 DM / LinkedIn</button>
+    </div>
+    <pre class="pitch" id="pitch-email-${i}">${esc(L.email_subject)}\n\n${esc(L.email_body)}</pre>
+    <pre class="pitch" id="pitch-dm-${i}" style="display:none">${esc(L.dm_pitch)}</pre>
+    ${reviewHint}
+    <div class="pitch-actions">
+      <button class="btn-acc" onclick="copyPitch(${i})">📋 Copy this pitch</button>
+      <button class="btn-sm" onclick="copyPitch(${i}, true)">Copy email only</button>
+    </div>
+
+    <div class="lead-foot">
+      <button class="btn-sm" onclick="toggleShort(${i})"><span class="star ${inList?'on':''}" id="star-${i}">${inList?'★':'☆'}</span> Shortlist</button>
+    </div>
+  </div>`;
+}
+
+function showPitch(btn, i, mode){
+  btn.parentElement.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
+  btn.classList.add("on");
+  $("pitch-email-"+i).style.display = mode==="email" ? "" : "none";
+  $("pitch-dm-"+i).style.display = mode==="dm" ? "" : "none";
+}
+
+function copyPitch(i, emailOnly){
+  const L = CURRENT.leads[i];
+  let text;
+  if (emailOnly) text = `${L.email_subject}\n\n${L.email_body}`;
+  else {
+    const mode = $("pitch-email-"+i).style.display === "none" ? "dm" : "email";
+    text = mode === "email"
+      ? `${L.email_subject}\n\n${L.email_body}`
+      : L.dm_pitch;
+  }
+  robustCopy(text, "Pitch copied — paste it and go 🚀");
+}
+
+function toggleShort(i){
+  const L = CURRENT.leads[i];
+  if (shortlist.has(L.name)) shortlist.delete(L.name);
+  else shortlist.set(L.name, L);
+  $("star-"+i).textContent = shortlist.has(L.name) ? "★" : "☆";
+  $("star-"+i).classList.toggle("on", shortlist.has(L.name));
+  updateShortBar();
+}
+
+function updateShortBar(){
+  const bar = $("shortBar");
+  if (shortlist.size){ bar.classList.add("show"); $("shortCount").textContent = `${shortlist.size} lead${shortlist.size===1?"":"s"} shortlisted`; }
+  else bar.classList.remove("show");
+}
+
+function exportCSV(){
+  const cols = ["name","category","city","fit","fit_label","phone","email","website","facebook","instagram","address","dm_role_hint","linkedin_search","email_subject","email_body","dm_pitch"];
+  const row = L => {
+    const li = (L.dm_links||[]).find(a=>a.label==="LinkedIn search");
+    return [L.name, CURRENT.category, CURRENT.city, L.fit, L.fit_label, L.phone||"", L.email||"", L.website||"", L.facebook||"", L.instagram||"", L.address||"", (L.dm_line||"").replace(/\*\*/g,""), li?li.url:"", L.email_subject, L.email_body, L.dm_pitch];
+  };
+  const q = v => `"${String(v??'').replace(/"/g,'""')}"`;
+  const csv = [cols.join(",")].concat([...shortlist.values()].map(row).map(r=>r.map(q).join(","))).join("\n");
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ai-outreach-leads.csv";
+  a.click();
+  toast("CSV downloading…");
+}
+
+function copyAllPitches(){
+  const out = [...shortlist.values()].map(L=>
+    `=== ${L.name} ===\nEMAIL SUBJECT: ${L.email_subject}\n\n${L.email_body}\n\nDM VERSION:\n${L.dm_pitch}\n`
+  ).join("\n" + "─".repeat(50) + "\n");
+  robustCopy(out, "All shortlisted pitches copied");
+}
+
+$("radius").oninput = e => $("radiusVal").textContent = e.target.value + " km";
+$("city").addEventListener("keydown", e=>{ if (e.key==="Enter") searchLeads(); });
+
+loadMeta().then(renderInfoOnly);
+function renderInfoOnly(){ /* svc info already set by loadMeta */ }
+</script>
+</body>
+</html>
